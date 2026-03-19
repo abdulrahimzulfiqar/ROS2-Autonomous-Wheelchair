@@ -37,27 +37,55 @@ Processing dense computer vision at 30 FPS requires a dedicated hardware GPU ten
 | **MPU6050 IMU** | 3.3V DC | ~3.5mA | Gyro + Accel for Fall Detection |
 | **18650 Cells (x3)** | 11.1V (3S) | Capacity varies | Powers the motors |
 
-### 🧑‍🔧 Building the Robot (Layman's Guide)
-If you are new to robotics, do not be intimidated! Follow this plain-English sequence to wire up the hardware safely.
+### 🧑‍🔧 Hardware Wiring Tables 
 
 *⚠️ **CRUCIAL RULE**: You MUST connect ALL ground wires (the black ones) from the Battery, Motor Driver, and Arduino together into a single joined circuit so the electricity can flow perfectly.*
 
-**Step 1: Powering the Motors**
-Grab your large 11.1V battery. Connect the Red wire (+) to the `12V` terminal on the L298N driver. Connect the Black wire (-) to the `GND` terminal. *This ensures the heavy motors get power without blowing up the sensitive computer brains.*
+**1. L298N Motor Driver Control to Arduino Uno**
+| L298N Pin | Arduino Pin | Description |
+| --------- | ----------- | ----------- |
+| **ENA** | Pin 6 | Left Motor PWM *(Remove Black Jumper)* |
+| **IN1** | Pin 7 | Left Motor Direction 1 |
+| **IN2** | Pin 8 | Left Motor Direction 2 |
+| **ENB** | Pin 11 | Right Motor PWM *(Remove Black Jumper)* |
+| **IN3** | Pin 12 | Right Motor Direction 1 |
+| **IN4** | Pin 13 | Right Motor Direction 2 |
 
-**Step 2: Connecting the Wheels (Motors to Driver)**
-Take your left motor's Red and White wires and plug them into the `OUT1` and `OUT2` terminals on the L298N block. Plug the right motor's Red and White wires into `OUT3` and `OUT4`.
+**2. Right Motor to Arduino / Motor Driver**
+| Right Motor Pins | Target Pin | Target Component |
+| ---------------- | ---------- | ---------------- |
+| Red Wire *(Power)* | OUT3 | L298N Motor Driver |
+| White Wire *(Power)*| OUT4| L298N Motor Driver |
+| Yellow *(Encoder C1)* | Pin 3 | Arduino Digital |
+| Green *(Encoder C2)* | Pin 5 | Arduino Digital |
+| Blue *(VCC)* | 5V | Arduino Power |
+| Black *(GND)* | GND | Arduino Ground |
 
-**Step 3: Powering the Brains (Raspberry Pi & Arduino)**
-Plug your standard 5V/3A battery pack (like a cell phone charger block) into the Raspberry Pi's USB-C port. Then, use a standard blue USB cable bridging the Raspberry Pi to the Arduino. This single wire automatically powers the Arduino *and* allows the Pi to send driving commands to it!
+**3. Left Motor to Arduino / Motor Driver**
+| Left Motor Pins | Target Pin | Target Component |
+| --------------- | ---------- | ---------------- |
+| Red Wire *(Power)* | OUT1 | L298N Motor Driver |
+| White Wire *(Power)*| OUT2| L298N Motor Driver |
+| Yellow *(Encoder C1)* | Pin 2 | Arduino Digital |
+| Green *(Encoder C2)* | Pin 4 | Arduino Digital |
+| Blue *(VCC)* | 5V | Arduino Power |
+| Black *(GND)* | GND | Arduino Ground |
 
-**Step 4: Connecting the Sensors**
-- **Lidar:** Plug the RPLidar straight into the Raspberry Pi's USB port.
-- **Speed Sensors (Encoders):** Connect the Left Motor's Yellow and Green wires to Arduino pins `2` and `4`. Connect the Right Motor to `3` and `5`. 
-- **Fall Detector (MPU6050):** Wire `VCC` to Arduino `3.3V`, `GND` to `GND`, `SDA` to pin `A4`, and `SCL` to `A5`.
+**4. MPU6050 IMU to Arduino**
+| MPU6050 Pin | Arduino Pin | Description |
+| ----------- | ----------- | ----------- |
+| **VCC** | 3.3V | 3.3V Power |
+| **GND** | GND | Ground |
+| **SDA** | A4 | I2C Data |
+| **SCL** | A5 | I2C Clock |
 
-**Step 5: Driving the Motors (Arduino to L298N)**
-Finally, connect the command wires so the Arduino can speed up the wheels. Remove the black jumpers on `ENA/ENB` first! Hook `ENA` ➔ Pin `6`, `IN1` ➔ `7`, `IN2` ➔ `8`, `ENB` ➔ `11`, `IN3` ➔ `12`, and `IN4` ➔ `13`.
+**5. Power Distribution & Connectors**
+| Power Source | Target Device | Connection Type |
+| ------------ | ------------- | --------------- |
+| **3S 18650 Battery** *(11.1V)*| L298N *(12V & GND)*| Direct Bare Wires |
+| **5V/3A Power Bank** | Raspberry Pi 4 | USB-C Power Cable |
+| **Raspberry Pi 4** | Arduino Uno | Standard USB Cable *(Provides Data & 5V Power)* |
+| **Raspberry Pi 4** | RPLidar A1 | Micro-USB Cable *(Provides Data & 5V Power)* |
 
 ---
 
