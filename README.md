@@ -101,6 +101,7 @@ graph TD;
     Driver --> Motor2[Motor 2]
     Motor1 -->|Encoder Ticks| Arduino
     Motor2 -->|Encoder Ticks| Arduino
+    IMU[MPU6050 Fall Detector] -->|I2C Data| Arduino
 ```
 
 ### 1. Firmware & Microcontroller Setup
