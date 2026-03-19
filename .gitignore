@@ -1,0 +1,14 @@
+# MacOS
+.DS_Store
+
+# Documentation & Personal FYP files
+*.pdf
+*.txt
+*.dmg
+Gemini.md
+.agent/
+
+# Web & IDE
+node_modules/
+.env
+.vscode/
