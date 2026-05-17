@@ -35,12 +35,12 @@ See the autonomous smart wheelchair in action! Below are the demonstrations of t
       <td align="center" width="50%">
         <b>🗺️ 1. 2D Cartographer SLAM (Map-Making)</b><br>
         <p>Watch how the spinning LiDAR scans the surrounding environment in real-time, building a high-precision 2D occupancy grid map via Google Cartographer.</p>
-        <video src="assets/mapmaking.mp4" width="100%" controls></video>
+        <video src="https://github.com/abdulrahimzulfiqar/ROS2-Autonomous-Wheelchair/raw/main/assets/mapmaking.mp4" width="100%" controls></video>
       </td>
       <td align="center" width="50%">
         <b>🤖 2. Autonomous Navigation & Path Planning</b><br>
         <p>Watch the wheelchair execute predictive path planning, dynamic obstacle avoidance, and precise target waypoint completion using the ROS 2 Nav2 stack.</p>
-        <video src="assets/autonomous.mp4" width="100%" controls></video>
+        <video src="https://github.com/abdulrahimzulfiqar/ROS2-Autonomous-Wheelchair/raw/main/assets/autonomous.mp4" width="100%" controls></video>
       </td>
     </tr>
   </table>
