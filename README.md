@@ -1,8 +1,9 @@
 # ROS 2 Autonomous Smart Wheelchair ♿🤖
 
 <div align="center">
-  <!-- TODO: Add a GIF or Image of the wheelchair moving or the smart dashboard here! -->
-  <img src="https://via.placeholder.com/800x400?text=Autonomous+Wheelchair+Demo+GIF+Goes+Here" alt="Smart Wheelchair Demo" width="800"/>
+  <!-- 📸 Physical Wheelchair Hero Image -->
+  <img src="assets/carimage.jpg" alt="ROS 2 Autonomous Smart Wheelchair Build" width="800"/>
+  <p><i>The fully assembled, custom-built autonomous smart wheelchair hardware platform.</i></p>
 </div>
 
 An end-to-end **Autonomous Smart Wheelchair** powered by ROS 2 (Humble), Raspberry Pi 4, and 2D LiDAR. 
@@ -21,6 +22,29 @@ This assistive technology project features room-to-room predictive navigation, r
 A common question from recruiters is why we relied on purely 2D LiDAR instead of a Camera-only (V-SLAM) pipeline like Tesla Vision.
 
 Processing dense computer vision at 30 FPS requires a dedicated hardware GPU tensor (like an Nvidia Jetson Orin). Running real-time Vision processing on a Raspberry Pi 4 alongside the ROS 2 Navigation stack would max out the CPU, causing massive latency. The RPLidar A1 is a brilliant engineering tradeoff because it offloads the dense mapping by computing precise millimeter point clouds natively on its own spinning hardware, routing lightweight arrays over USB. This allows the Pi to navigate perfectly with ultra-low compute overhead.
+
+---
+
+## 🎥 Live Video Demonstrations
+
+See the autonomous smart wheelchair in action! Below are the demonstrations of the real-time mapping process and autonomous room-to-room navigation.
+
+<div align="center">
+  <table>
+    <tr>
+      <td align="center" width="50%">
+        <b>🗺️ 1. 2D Cartographer SLAM (Map-Making)</b><br>
+        <p>Watch how the spinning LiDAR scans the surrounding environment in real-time, building a high-precision 2D occupancy grid map via Google Cartographer.</p>
+        <video src="assets/mapmaking.mp4" width="100%" controls></video>
+      </td>
+      <td align="center" width="50%">
+        <b>🤖 2. Autonomous Navigation & Path Planning</b><br>
+        <p>Watch the wheelchair execute predictive path planning, dynamic obstacle avoidance, and precise target waypoint completion using the ROS 2 Nav2 stack.</p>
+        <video src="assets/autonomous.mp4" width="100%" controls></video>
+      </td>
+    </tr>
+  </table>
+</div>
 
 ---
 
@@ -124,13 +148,37 @@ colcon build --symlink-install
 source install/setup.bash
 ```
 
-### 3. Web App Dashboard Setup
+### 3. Web App Dashboard Setup & Showcase
 Inside the `/web_app` folder of this repo:
 ```bash
 npm install
 npm run dev
 ```
 **Security Note:** Create a `.env` file in your `web_app` directory containing your strict Firebase Config limits. Never commit it to GitHub. Ask a caregiver to provision your credentials!
+
+#### 📱 React Web App User Interface
+
+<div align="center">
+  <table>
+    <tr>
+      <td align="center" width="33.3%">
+        <b>1. Caregiver Telemetry Hub</b><br><br>
+        <img src="assets/appimage.png" alt="Caregiver Telemetry Hub" width="100%"/>
+        <p><small>Tracks exact physical wheelchair coordinates, navigation status, and target arrival alerts globally.</small></p>
+      </td>
+      <td align="center" width="33.3%">
+        <b>2. Voice Command Panel</b><br><br>
+        <img src="assets/appimage2.png" alt="Voice Command Panel" width="100%"/>
+        <p><small>Enables users to issue hands-free voice commands ("Go to Kitchen") via Google's Web Speech API.</small></p>
+      </td>
+      <td align="center" width="33.3%">
+        <b>3. Emergency Event Log</b><br><br>
+        <img src="assets/appimage3.png" alt="Emergency Event Log" width="100%"/>
+        <p><small>Instantly captures hardware-level MPU6050 tip-over fall notifications with 3s database write throttle protection.</small></p>
+      </td>
+    </tr>
+  </table>
+</div>
 
 ### 4. 🗺️ Map Visualization & Foxglove Studio
 To plan navigation waypoints visually or view the physical mapping structure created by the Lidar, we use **Foxglove Studio**.
@@ -140,8 +188,9 @@ To plan navigation waypoints visually or view the physical mapping structure cre
 4. Hover over the Foxglove map to read exact `X` and `Y` telemetry coordinates. Caregivers input those precise numbers into the React Web App to permanently save distinct destinations (like "Kitchen")!
 
 <div align="center">
-  <!-- TODO: Add Screenshot of Foxglove Studio Map Navigation Here -->
-  <img src="https://via.placeholder.com/800x400?text=Foxglove+Studio+Navigation+Map+Screenshot+Here" alt="Foxglove Navigation Demo" width="800"/>
+  <!-- 📸 Foxglove Map Screenshot -->
+  <img src="https://via.placeholder.com/800x400?text=Foxglove+Studio+Navigation+Map+Screenshot" alt="Foxglove Navigation Demo" width="800"/>
+  <p><i>Live generated SLAM trajectory and scan markers rendered in Foxglove Studio</i></p>
 </div>
 
 ---
