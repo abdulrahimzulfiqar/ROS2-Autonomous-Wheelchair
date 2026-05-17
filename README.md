@@ -30,22 +30,17 @@ Processing dense computer vision at 30 FPS requires a dedicated hardware GPU ten
 See the autonomous smart wheelchair in action! Below are the demonstrations of the real-time mapping process and autonomous room-to-room navigation.
 
 <div align="center">
-  <table>
-    <tr>
-      <td align="center" width="50%">
-        <b>🗺️ 1. 2D Cartographer SLAM (Map-Making)</b><br>
-        <p>Watch how the spinning LiDAR scans the surrounding environment in real-time, building a high-precision 2D occupancy grid map via Google Cartographer.</p>
-        <!-- TODO: Click Edit on GitHub and Drag & Drop your SLAM mapping video right here! -->
-        <img src="https://via.placeholder.com/600x350?text=Drag+and+Drop+SLAM+Video+Here" alt="Map Making Placeholder" width="100%"/>
-      </td>
-      <td align="center" width="50%">
-        <b>🤖 2. Autonomous Navigation & Path Planning</b><br>
-        <p>Watch the wheelchair execute predictive path planning, dynamic obstacle avoidance, and precise target waypoint completion using the ROS 2 Nav2 stack.</p>
-        <!-- TODO: Click Edit on GitHub and Drag & Drop your Autonomous Driving video right here! -->
-        <img src="https://via.placeholder.com/600x350?text=Drag+and+Drop+Autonomous+Video+Here" alt="Autonomous Navigation Placeholder" width="100%"/>
-      </td>
-    </tr>
-  </table>
+  <h3>🗺️ 1. 2D Cartographer SLAM (Map-Making)</h3>
+  <p>Watch how the spinning LiDAR scans the surrounding environment in real-time, building a high-precision 2D occupancy grid map via Google Cartographer.</p>
+  <!-- TODO: Click Edit on GitHub and Drag & Drop your SLAM mapping video right here! -->
+  <img src="https://via.placeholder.com/800x450?text=Drag+and+Drop+SLAM+Video+Here" alt="Map Making Placeholder" width="800"/>
+
+  <br><br><br>
+
+  <h3>🤖 2. Autonomous Navigation & Path Planning</h3>
+  <p>Watch the wheelchair execute predictive path planning, dynamic obstacle avoidance, and precise target waypoint completion using the ROS 2 Nav2 stack.</p>
+  <!-- TODO: Click Edit on GitHub and Drag & Drop your Autonomous Driving video right here! -->
+  <img src="https://via.placeholder.com/800x450?text=Drag+and+Drop+Autonomous+Video+Here" alt="Autonomous Navigation Placeholder" width="800"/>
 </div>
 
 ---
