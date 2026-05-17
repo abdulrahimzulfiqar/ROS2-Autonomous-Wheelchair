@@ -158,23 +158,24 @@ npm run dev
 <div align="center">
   <table>
     <tr>
-      <td align="center" width="33.3%">
+      <td align="center" width="50%">
         <b>1. Caregiver Telemetry Hub</b><br><br>
         <img src="assets/appimage.png" alt="Caregiver Telemetry Hub" width="100%"/>
         <p><small>Tracks exact physical wheelchair coordinates, navigation status, and target arrival alerts globally.</small></p>
       </td>
-      <td align="center" width="33.3%">
+      <td align="center" width="50%">
         <b>2. Voice Command Panel</b><br><br>
         <img src="assets/appimage2.png" alt="Voice Command Panel" width="100%"/>
         <p><small>Enables users to issue hands-free voice commands ("Go to Kitchen") via Google's Web Speech API.</small></p>
       </td>
-      <td align="center" width="33.3%">
-        <b>3. Emergency Event Log</b><br><br>
-        <img src="assets/appimage3.png" alt="Emergency Event Log" width="100%"/>
-        <p><small>Instantly captures hardware-level MPU6050 tip-over fall notifications with 3s database write throttle protection.</small></p>
-      </td>
     </tr>
   </table>
+
+  <br>
+
+  <b>3. Emergency Event Log</b><br><br>
+  <img src="assets/appimage3.png" alt="Emergency Event Log" width="60%"/>
+  <p><small>Instantly captures hardware-level MPU6050 tip-over fall notifications with 3s database write throttle protection.</small></p>
 </div>
 
 ### 4. 🗺️ Map Visualization & Foxglove Studio
