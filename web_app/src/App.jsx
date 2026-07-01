@@ -166,7 +166,7 @@ function CaregiverDashboard({ connected, position, alerts, locations, lastAchiev
       y: parseFloat(newY.toString().replace(',', '.')) || 0,
       theta: parseFloat(newTheta.toString().replace(',', '.')) || 0,
     });
-    
+
     setNewName(''); setNewX(''); setNewY(''); setNewTheta('0');
   };
 
@@ -278,40 +278,59 @@ function CaregiverDashboard({ connected, position, alerts, locations, lastAchiev
 
 // ─── Account Management ─────────────────────────────────────────────────────
 
+/**
+ * AccountManagement Component: Handles registering new users/caregivers,
+ * listing all saved accounts, and deleting profiles.
+ * @param {Object} currentUser The currently logged-in account object
+ */
 function AccountManagement({ currentUser }) {
+  // Local state for profile inputs and account list
   const [accounts, setAccounts] = useState([]);
   const [newName, setNewName] = useState('');
   const [newEmail, setNewEmail] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [newRole, setNewRole] = useState('user');
 
+  // React Effect: Listen to real-time additions/deletions of accounts in the Firestore DB
   useEffect(() => {
+    // onSnapshot attaches a live listener. Every change in DB automatically updates our UI state.
     const unsub = onSnapshot(collection(db, 'accounts'), snap => {
       setAccounts(snap.docs.map(d => ({ id: d.id, ...d.data() })));
     });
-    return unsub;
+    return unsub; // Unsubscribe listener when this component unmounts
   }, []);
 
+  /**
+   * Action handler: Creates a new user profile document in the Firestore DB
+   * @param {Event} e Submit event object
+   */
   const addAccount = async (e) => {
     e.preventDefault();
     if (!newName || !newEmail || !newPassword) return;
 
-    // Check if email already exists
+    // Checks for email duplicates locally before writing to database
     if (accounts.find(a => a.email === newEmail)) {
       alert('An account with this email already exists!');
       return;
     }
 
+    // Write fields to Firestore 'accounts' collection
     await addDoc(collection(db, 'accounts'), {
       name: newName,
       email: newEmail,
       password: newPassword,
       role: newRole,
     });
+    // Clear input fields
     setNewName(''); setNewEmail(''); setNewPassword(''); setNewRole('user');
   };
 
+  /**
+   * Action handler: Deletes a user profile document from Firestore by its ID
+   * @param {string} id Unique Firestore document reference ID
+   */
   const deleteAccount = async (id) => {
+    // Safety check: Prevent caregivers from accidentally locking themselves out of the system
     if (id === currentUser.id) {
       alert("You cannot delete your own account!");
       return;
@@ -380,55 +399,61 @@ function AccountManagement({ currentUser }) {
 
 // ─── Main App ───────────────────────────────────────────────────────────────
 
+/**
+ * Main App Component: Coordinates layout routing, connects to ROS Bridge WebSocket,
+ * runs the Web Speech engine, and syncs location/telemetry details with Firebase.
+ */
 function App() {
-  const [currentUser, setCurrentUser] = useState(getSession());
-  const [connected, setConnected] = useState(false);
-  const [rosUrl, setRosUrl] = useState(`ws://192.168.100.129:9090`);
-  const [isListening, setIsListening] = useState(false);
-  const [transcript, setTranscript] = useState('');
-  const [wakeWordMode, setWakeWordMode] = useState(false);
-  const [position, setPosition] = useState({ x: '0.00', y: '0.00' });
-  const [alerts, setAlerts] = useState([]);
-  const [locations, setLocations] = useState([]);
-  const [activeDestination, setActiveDestination] = useState(null);
-  const [lastAchieved, setLastAchieved] = useState(null);
+  // --- APPLICATION STATES ---
+  const [currentUser, setCurrentUser] = useState(getSession()); // Stores logged-in profile data (name, email, role)
+  const [connected, setConnected] = useState(false); // Connection status with the robot's ROS bridge
+  const [rosUrl, setRosUrl] = useState(`ws://192.168.100.129:9090`); // WebSocket address of the robot
+  const [isListening, setIsListening] = useState(false); // Status of the Web Speech microphone listener
+  const [transcript, setTranscript] = useState(''); // Live text transcript of spoken voice commands
+  const [wakeWordMode, setWakeWordMode] = useState(false); // True if 'Always Listening' (Wake Word: "wheelchair") is active
+  const [position, setPosition] = useState({ x: '0.00', y: '0.00' }); // Real-time X, Y odometry values plotted on UI
+  const [alerts, setAlerts] = useState([]); // List of emergency alerts fetched from Firebase DB
+  const [locations, setLocations] = useState([]); // List of saved destinations fetched from Firebase DB
+  const [activeDestination, setActiveDestination] = useState(null); // Active target coordinates being tracked
+  const [lastAchieved, setLastAchieved] = useState(null); // Last reached destination name
 
-  const ros = useRef(null);
-  const goalPublisher = useRef(null);
-  const odomSubscriber = useRef(null);
-  const alertSubscriber = useRef(null);
-  const recognition = useRef(null);
-  const wakeWordRef = useRef(false);
-  const locationsRef = useRef([]);
-  const navigate = useNavigate();
-  const location = useLocation();
+  // --- REFS (PERSISTENT VALUES ACROSS RENDERS) ---
+  const ros = useRef(null); // Persistent ROS Connection object
+  const goalPublisher = useRef(null); // Persistent ROS topic publisher for goal coordinates
+  const odomSubscriber = useRef(null); // Persistent ROS topic subscriber for odometry coordinate inputs
+  const alertSubscriber = useRef(null); // Persistent ROS topic subscriber for emergency alerts
+  const recognition = useRef(null); // Persistent Web Speech API instance
+  const wakeWordRef = useRef(false); // Sync reference variable for Wake Word status inside closure callbacks
+  const locationsRef = useRef([]); // Sync reference variable for locations list inside closure callbacks
+  const navigate = useNavigate(); // Navigation router instance
+  const location = useLocation(); // Current active page URL tracker
 
-  // Load locations from Firebase
+  // Sync effect: Retrieve and sort saved coordinates from Firestore
   useEffect(() => {
     if (!currentUser) return;
     const unsub = onSnapshot(collection(db, 'locations'), snap => {
       const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      // Sort alphabetically for clean UI
-      data.sort((a,b) => a.name.localeCompare(b.name));
+      // Sort alphabetically for a clean layout on the Rider dashboard
+      data.sort((a, b) => a.name.localeCompare(b.name));
       setLocations(data);
-      locationsRef.current = data;
+      locationsRef.current = data; // Keep reference updated so closure callbacks always read fresh locations
     });
-    return unsub;
+    return unsub; // Unsubscribe when user logs out or components unmount
   }, [currentUser]);
 
-  // Load emergency alerts from Firebase
+  // Sync effect: Retrieve and slice history of last 50 emergency alerts
   useEffect(() => {
     if (!currentUser) return;
     const unsub = onSnapshot(collection(db, 'alerts'), snap => {
       const data = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      // Sort so newest alerts appear at the top
+      // Sort so the newest alerts appear at the top of the feed
       data.sort((a, b) => b.timestamp - a.timestamp);
       setAlerts(data.slice(0, 50)); // Keep history of last 50 alerts
     });
     return unsub;
   }, [currentUser]);
 
-  // Load last achieved destination from Firebase
+  // Sync effect: Listen to changes of the last reached destination state
   useEffect(() => {
     if (!currentUser) return;
     const unsub = onSnapshot(doc(db, 'state', 'last_destination'), snap => {
@@ -437,26 +462,27 @@ function App() {
     return unsub;
   }, [currentUser]);
 
-  // Monitor physical arrivals using live ROS Odometry
+  // Monitoring Effect: Tracks physical arrival at active destinations using live ROS odometry
   useEffect(() => {
     if (activeDestination) {
+      // Calculate distance between robot position and the target location coordinates using the Distance Formula (Pythagorean Theorem)
       const dx = parseFloat(position.x) - activeDestination.x;
       const dy = parseFloat(position.y) - activeDestination.y;
       const dist = Math.sqrt(dx * dx + dy * dy);
-      
-      // If the robot gets within 0.5 meters of the requested goal coordinates, consider it successfully arrived
+
+      // If the robot gets within 0.5 meters of the destination, mark it as arrived in Firestore database
       if (dist < 0.5) {
         setDoc(doc(db, 'state', 'last_destination'), {
           name: activeDestination.name,
           timestamp: Date.now()
         }).catch(err => console.error("Error setting arrival", err));
-        
-        setActiveDestination(null);
+
+        setActiveDestination(null); // Clear tracking to prevent duplicate logs
       }
     }
   }, [position, activeDestination]);
 
-  // Seed default admin account if DB is empty
+  // Seed Effect: Automatically seeds default accounts (Caregiver & User) if Firestore 'accounts' is completely empty
   useEffect(() => {
     async function seedDefaults() {
       const snap = await getCountFromServer(collection(db, 'accounts'));
@@ -468,51 +494,67 @@ function App() {
     seedDefaults();
   }, []);
 
-  // Redirect to login if not authenticated
+  // Redirect Effect: Routes unauthenticated sessions to the Login panel
   useEffect(() => {
     if (!currentUser && location.pathname !== '/login') {
       navigate('/login');
     }
   }, [currentUser, location.pathname]);
 
+  // Startup Effect: Starts up connections to ROS Bridge and Microphone listeners
   useEffect(() => {
     if (currentUser) {
       initROS();
       initSpeechRecognition();
     }
     return () => {
-      if (ros.current) ros.current.close();
+      if (ros.current) ros.current.close(); // Clean up socket connection on unmount
     };
   }, [rosUrl, currentUser]);
 
+  /**
+   * Action handler: Logs in a user session, saves it locally, and routes to the correct dashboard
+   * @param {Object} user Logged-in user account details
+   */
   const handleLogin = (user) => {
     saveSession(user);
     setCurrentUser(user);
-    navigate(user.role === 'caregiver' ? '/caregiver' : '/');
+    navigate(user.role === 'caregiver' ? '/caregiver' : '/'); // Route caregivers to Admin, users to rider dashboard
   };
 
+  /**
+   * Action handler: Logs out the current session, deletes session cache, and closes WebSocket
+   */
   const handleLogout = () => {
     clearSession();
     setCurrentUser(null);
     setConnected(false);
-    if (ros.current) ros.current.close();
+    if (ros.current) ros.current.close(); // Safely terminate connection
     navigate('/login');
   };
 
+  /**
+   * Network handler: Establishes a WebSocket connection with the robot's rosbridge server
+   * and sets up the live subscriptions and publishers.
+   */
   const initROS = () => {
-    if (ros.current) ros.current.close();
+    if (ros.current) ros.current.close(); // Clean up old sockets before opening a new one
 
+    // Connect to the WebSocket port (usually 9090)
     ros.current = new ROSLIB.Ros({ url: rosUrl });
 
+    // Success Callback: Connect success
     ros.current.on('connection', () => {
       setConnected(true);
 
+      // 1. Subscribe to '/odom_raw' (geometry_msgs/msg/Odometry) to track the wheelchair position on the screen
       odomSubscriber.current = new ROSLIB.Topic({
         ros: ros.current,
         name: '/odom_raw',
         messageType: 'nav_msgs/Odometry'
       });
 
+      // Update position coordinates in real-time
       odomSubscriber.current.subscribe((msg) => {
         setPosition({
           x: msg.pose.pose.position.x.toFixed(2),
@@ -520,12 +562,14 @@ function App() {
         });
       });
 
+      // 2. Subscribe to '/emergency_alerts' (std_msgs/msg/String) to listen for crashes, falls, or bumper presses
       alertSubscriber.current = new ROSLIB.Topic({
         ros: ros.current,
         name: '/emergency_alerts',
         messageType: 'std_msgs/String'
       });
 
+      // Save incoming alerts to the Firestore database so caregivers receive notifications on their dashboard
       alertSubscriber.current.subscribe(async (msg) => {
         try {
           // Idempotency Key: Guarantees that if the user has 3 phones open reading the same ROS stream,
@@ -539,17 +583,20 @@ function App() {
             timestamp: Date.now(),
             msg: msg.data
           });
-        } catch(e) { console.error("Firebase alerts error", e); }
+        } catch (e) { console.error("Firebase alerts error", e); }
       });
     });
 
+    // Error Callback: Connection failed (e.g. wheelchair is turned off or on a different Wi-Fi)
     ros.current.on('error', () => {
       console.error('ROS Connection Error');
       setConnected(false);
     });
 
+    // Close Callback: Socket closed
     ros.current.on('close', () => setConnected(false));
 
+    // 3. Initialize the publisher for goal navigation coordinates
     goalPublisher.current = new ROSLIB.Topic({
       ros: ros.current,
       name: '/goal_pose',
@@ -557,18 +604,24 @@ function App() {
     });
   };
 
+  /**
+   * Web Speech handler: Initializes browser speech recognition, configures
+   * transcript handlers, and configures wake-word filters.
+   */
   const initSpeechRecognition = () => {
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       recognition.current = new SpeechRecognition();
-      recognition.current.continuous = false; // We use onend to restart manually
-      recognition.current.interimResults = true; // Required for fast Mobile Chrome processing
+      recognition.current.continuous = false; // Stop listening automatically when speech ends
+      recognition.current.interimResults = true; // Capture raw intermediate results for visual responsiveness
       recognition.current.lang = 'en-US';
 
+      // Event handler fired as speech is transcribed
       recognition.current.onresult = (event) => {
         let text = "";
         let isFinal = false;
 
+        // Compile spoken words
         for (let i = event.resultIndex; i < event.results.length; ++i) {
           text += event.results[i][0].transcript;
           if (event.results[i].isFinal) {
@@ -576,13 +629,13 @@ function App() {
           }
         }
 
-        // Mobile speech APIs often add trailing periods or punctuation, which breaks string matching. Strip it out.
+        // Strip punctuation and convert text to lowercase to ensure clean string matching
         text = text.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, "").trim();
         setTranscript(text + (isFinal ? "" : " ..."));
 
         if (isFinal) {
           if (wakeWordRef.current) {
-            // Wake Word Mode: Only process if they say "wheelchair"
+            // Wake Word Filtering: Only execute command if the word "wheelchair" is present
             if (text.includes('wheelchair')) {
               const command = text.split('wheelchair')[1] || text;
               processVoiceCommand(command.trim());
@@ -590,25 +643,27 @@ function App() {
               console.log("Ignored (no wake word):", text);
             }
           } else {
+            // Tap-to-Talk: Execute command directly
             processVoiceCommand(text);
           }
 
-          // Force stop on Android to prevent indefinite listening lock after a command
+          // Stop listening on Android mobile devices to prevent infinite microphone session locks
           if (!wakeWordRef.current) {
-            try { recognition.current.stop(); } catch(e) {}
+            try { recognition.current.stop(); } catch (e) { }
           }
         }
       };
 
+      // Handle microphone input errors
       recognition.current.onerror = (event) => {
         console.error("Speech Recognition Error:", event.error);
         setTranscript(`Mic Error: ${event.error}`);
         setIsListening(false);
       };
 
+      // Restart listener automatically if in continuous Wake Word mode
       recognition.current.onend = () => {
         setIsListening(false);
-        // If Wake Word mode is ON, immediately restart listening
         if (wakeWordRef.current) {
           setTimeout(() => {
             if (wakeWordRef.current && recognition.current) {
@@ -617,7 +672,7 @@ function App() {
                 setIsListening(true);
               } catch (e) { }
             }
-          }, 300); // slight delay avoids browser mic access spam
+          }, 300); // 300ms delay protects against browser rate-limiting
         }
       };
     } else {
@@ -625,10 +680,13 @@ function App() {
     }
   };
 
+  /**
+   * Action handler: Toggles the "Always Listening" Wake Word mode state
+   */
   const toggleWakeWord = () => {
     const newMode = !wakeWordMode;
     setWakeWordMode(newMode);
-    wakeWordRef.current = newMode;
+    wakeWordRef.current = newMode; // Sync reference variable for microphone end handlers
 
     if (newMode) {
       if (!isListening && recognition.current) {
@@ -647,6 +705,9 @@ function App() {
     }
   };
 
+  /**
+   * Action handler: Toggles the manual Tap-to-Talk microphone session
+   */
   const toggleListen = () => {
     if (isListening) {
       recognition.current.stop();
@@ -657,6 +718,11 @@ function App() {
     }
   };
 
+  /**
+   * Navigation handler: Publishes the coordinates of the chosen location onto the ROS 2 goal topic
+   * @param {string} destName Human-readable name of destination (e.g. "Kitchen")
+   * @param {Object} pose Object containing numerical X, Y coordinates and Yaw (theta) rotation in radians
+   */
   const sendGoal = (destName, pose) => {
     // Determine connection dynamically since the React state might be stale
     // inside the Speech Recognition closure function
@@ -669,34 +735,42 @@ function App() {
 
     setTranscript(`Navigating to ${destName}...`);
 
+    // Standard ROS 2 geometry_msgs/PoseStamped structure
     const goalMsg = {
       header: {
-        frame_id: 'map',
-        stamp: { secs: 0, nsecs: 0 }
+        frame_id: 'map', // Goal coordinates are defined relative to the static 'map' coordinate frame
+        stamp: { secs: 0, nsecs: 0 } // Using 0 stamps tells tf2 to evaluate the transform instantly
       },
       pose: {
         position: { x: pose.x, y: pose.y, z: 0.0 },
+        // Conversions from Euler Yaw angle (theta) to standard 3D Quaternions (z, w)
         orientation: { x: 0.0, y: 0.0, z: Math.sin(pose.theta / 2), w: Math.cos(pose.theta / 2) }
       }
     };
 
     setActiveDestination({ name: destName, x: parseFloat(pose.x), y: parseFloat(pose.y) });
-    goalPublisher.current.publish(goalMsg);
+    goalPublisher.current.publish(goalMsg); // Send the goal to the Pi
   };
 
+  /**
+   * Action handler: Maps spoken text to emergency controls or saved destinations
+   * @param {string} text Sanitized transcription of user voice command
+   */
   const processVoiceCommand = (text) => {
     // Dynamically match voice commands against saved locations
-    const locs = locationsRef.current;
+    const locs = locationsRef.current; // Read live location mappings
 
+    // A: Stop Command Check
     if (text.includes("stop")) {
       stopRobot();
       setTranscript("Emergency Stop Triggered by Voice");
       return;
     }
 
+    // B: Destination Matching Check
     for (const loc of locs) {
       if (text.includes(loc.name.toLowerCase())) {
-        sendGoal(loc.name, loc);
+        sendGoal(loc.name, loc); // Send the wheelchair to matched location
         return;
       }
     }
@@ -704,11 +778,15 @@ function App() {
     setTranscript("Command not recognized: " + text);
   };
 
+  /**
+   * Safety handler: Halts the robot instantly.
+   * Publishes zero speeds to /cmd_vel and cancels active goals on the Nav2 Action Server.
+   */
   const stopRobot = async () => {
     const isCurrentlyConnected = ros.current && ros.current.isConnected;
-    setActiveDestination(null); // Clear active physical destination tracking
+    setActiveDestination(null); // Stop physical arrival tracking
 
-    // Log the manual emergency stop to the persistent database
+    // Record the manual emergency log in the Firebase database
     try {
       if (currentUser) {
         await addDoc(collection(db, 'alerts'), {
@@ -717,11 +795,11 @@ function App() {
           msg: `MANUAL EMERGENCY STOP TRIGGERED BY ${currentUser.name.toUpperCase()}`
         });
       }
-    } catch(e) { console.error("Firebase alerts error", e); }
+    } catch (e) { console.error("Firebase alerts error", e); }
 
     if (!isCurrentlyConnected) return;
 
-    // 1. Send zero velocity (stops manual teleop)
+    // 1. Publish zero velocities to '/cmd_vel' to immediately stop any manual manual steering overrides
     const cmdVel = new ROSLIB.Topic({
       ros: ros.current,
       name: '/cmd_vel',
@@ -732,7 +810,7 @@ function App() {
       angular: { x: 0, y: 0, z: 0 }
     });
 
-    // 2. Cancel Nav2 Goals explicitly via the Action Server Cancellation Service
+    // 2. Cancel all active navigation goals on the Nav2 Action Server using the Cancellation Service
     // In roslibjs 2.1.0, ServiceRequest was removed, so we pass the raw object directly
     const cancelService = new ROSLIB.Service({
       ros: ros.current,
@@ -740,6 +818,7 @@ function App() {
       serviceType: 'action_msgs/srv/CancelGoal'
     });
 
+    // Standard cancellation message structure (All zeros in uuid indicates cancelling ALL goals)
     const cancelRequest = {
       goal_info: {
         goal_id: {
