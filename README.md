@@ -33,14 +33,17 @@ See the autonomous smart wheelchair in action! Below are the demonstrations of t
   <h3>🗺️ 1. 2D Cartographer SLAM (Map-Making)</h3>
   <p>Watch how the spinning LiDAR scans the surrounding environment in real-time, building a high-precision 2D occupancy grid map via Google Cartographer.</p>
   <!-- TODO: Click Edit on GitHub and Drag & Drop your SLAM mapping video right here! -->
-  <img src="https://via.placeholder.com/800x450?text=Drag+and+Drop+SLAM+Video+Here" alt="Map Making Placeholder" width="800"/>
+  
+  https://github.com/user-attachments/assets/3d9d18e0-bff8-453b-9cfe-c8f5d518db99
+
 
   <br><br><br>
 
   <h3>🤖 2. Autonomous Navigation & Path Planning</h3>
   <p>Watch the wheelchair execute predictive path planning, dynamic obstacle avoidance, and precise target waypoint completion using the ROS 2 Nav2 stack.</p>
   <!-- TODO: Click Edit on GitHub and Drag & Drop your Autonomous Driving video right here! -->
-  <img src="https://via.placeholder.com/800x450?text=Drag+and+Drop+Autonomous+Video+Here" alt="Autonomous Navigation Placeholder" width="800"/>
+  
+  https://github.com/user-attachments/assets/6eddb357-4569-4883-a333-2ce82ca87bde
 </div>
 
 ---
@@ -185,11 +188,8 @@ To plan navigation waypoints visually or view the physical mapping structure cre
 3. Add a **3D Panel** and subscribe to `/map`, `/scan`, and `/tf` to view the live generated SLAM trajectory.
 4. Hover over the Foxglove map to read exact `X` and `Y` telemetry coordinates. Caregivers input those precise numbers into the React Web App to permanently save distinct destinations (like "Kitchen")!
 
-<div align="center">
-  <!-- 📸 Foxglove Map Screenshot -->
-  <img src="https://via.placeholder.com/800x400?text=Foxglove+Studio+Navigation+Map+Screenshot" alt="Foxglove Navigation Demo" width="800"/>
-  <p><i>Live generated SLAM trajectory and scan markers rendered in Foxglove Studio</i></p>
-</div>
+
+
 
 ---
 
