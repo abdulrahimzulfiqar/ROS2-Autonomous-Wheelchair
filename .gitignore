@@ -7,8 +7,28 @@
 *.dmg
 Gemini.md
 .agent/
+strucutreForOwnUnderstanding
+temp.rtf
 
 # Web & IDE
 node_modules/
 .env
 .vscode/
+
+# Python Cache
+__pycache__/
+*.pyc
+
+# ROS 2 build files
+lidarbot_ws/build/
+lidarbot_ws/install/
+lidarbot_ws/log/
+
+# Python Virtual Environments
+venv/
+.venv/
+
+# Benchmark telemetry logs
+benchmark_results/
+*.csv
+*.html
